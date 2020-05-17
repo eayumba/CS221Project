@@ -10,6 +10,7 @@ or sum else, or within 1 key)
 
 2. program something that picks randomly from this set of notes for however
 many notes we want baseline song to go for
+2b. create stream object and append notes to the stream
 
 DONT NEED: actual midi files/songs yet
 """
@@ -29,9 +30,13 @@ def generateBaselineNotes():
 
 def main():
     baseLineNotes = generateBaselineNotes()
+    s = music21.stream.Stream()
     for i in range(NUM_NOTES):
         note = music21.note.Note(random.choice(baseLineNotes))
-        note.show('midi')
+        s.append(note)
+        # note.show('midi')
+    s.write('midi', fp='test_output.mid')
+    # s.show('midi')
 
 if __name__ == '__main__':
     main()
