@@ -24,29 +24,34 @@ def generateBaselineNotes():
     midi = music21.converter.parse(FILE_NAME)
     baseLineNotes = []
     notes_to_parse = None
-    s = music21.stream.Stream()
-    try: # file has instrument parts
-        s2 = music21.instrument.partitionByInstrument(midi)
-        print("S2 has %s elements" %(len(s2)))
-        print(s2.parts)
-        for part in s2:
-            if isinstance(part.getInstrument(), music21.instrument.Flute):
-                print(part)
-            print(part.getInstrument())
-        notes_to_parse = s2.parts[0].recurse()
-    except: # file has notes in a flat structure
-        notes_to_parse = midi.flat.notes
+    output_midi = music21.stream.Stream()
+
+    instruments = music21.instrument.partitionByInstrument(midi)
+    print("Instruments has %s elements" %(len(instruments)))
+    print(instruments.parts)
+    for part in instruments:
+        if isinstance(part.getInstrument(), music21.instrument.Flute):
+            print(part)
+        print(part.getInstrument())
+    notes_to_parse = instruments.parts[0].recurse()
+    #except: # file has notes in a flat structure
+        # notes_to_parse = midi.flat.notes
 
     for element in notes_to_parse:
         if isinstance(element, music21.note.Note):
             baseLineNotes.append(str(element.pitch))
-            s.append(music21.note.Note(str(element.pitch)))
+            output_midi.append(element)
+            # output_midi.append(music21.note.Note(str(element.pitch)))
         elif isinstance(element, music21.chord.Chord):
+            print(str(element))
             baseLineNotes.append('.'.join(str(n) for n in element.normalOrder))
+            # output_midi.append(music21.chord.Chord(str(element.pitch)))
+            output_midi.append(element)
 
+    # TODO: try making a distribution and sampling from there?
 
-    print(baseLineNotes)
-    return s
+    print(baseLineNotes)  # this is just for us to test what notes have been added
+    return output_midi
     # for i in range(START_OCTAVE,START_OCTAVE + NUM_OCTAVES):
     #     for j in range(len(NOTES)):
     #         baselineNotes.append(NOTES[j] + str(i))
