@@ -1,6 +1,8 @@
 import music21
 import random
-FILE_NAME = 'shape_of_you.mid'
+from Data_Parser import getNotes
+
+
 """
 clear goal for baseline:
 
@@ -19,54 +21,57 @@ NOTES = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
 NUM_NOTES = 50
 NUM_OCTAVES = 2
 START_OCTAVE = 4
+SEQUENCE_LEN = 20
 
-def generateBaselineNotes():
-    midi = music21.converter.parse(FILE_NAME)
-    baseLineNotes = []
-    notes_to_parse = None
-    output_midi = music21.stream.Stream()
-
-    instruments = music21.instrument.partitionByInstrument(midi)
-    print("Instruments has %s elements" %(len(instruments)))
-    print(instruments.parts)
-    for part in instruments:
-        if isinstance(part.getInstrument(), music21.instrument.Flute):
-            print(part)
-        print(part.getInstrument())
-    notes_to_parse = instruments.parts[0].recurse()
-    #except: # file has notes in a flat structure
-        # notes_to_parse = midi.flat.notes
-
-    for element in notes_to_parse:
-        if isinstance(element, music21.note.Note):
-            baseLineNotes.append(str(element.pitch))
-            output_midi.append(element)
-            # output_midi.append(music21.note.Note(str(element.pitch)))
-        elif isinstance(element, music21.chord.Chord):
-            print(str(element))
-            baseLineNotes.append('.'.join(str(n) for n in element.normalOrder))
-            # output_midi.append(music21.chord.Chord(str(element.pitch)))
-            output_midi.append(element)
+# def generateBaselineNotes():
+#     midi = music21.converter.parse(FILE_NAME)
+#     baseLineNotes = []
+#     notes_to_parse = None
+#     s = music21.stream.Stream()
+#     try: # file has instrument parts
+#         s2 = music21.instrument.partitionByInstrument(midi)
+#         notes_to_parse = s2.parts[0].recurse()
+#     except: # file has notes in a flat structure
+#         notes_to_parse = midi.flat.notes
+#
+#     for element in notes_to_parse:
+#         if isinstance(element, music21.note.Note):
+#             # baseLineNotes.append(str(element.pitch))
+#             baseLineNotes(element.name)
+#         elif isinstance(element, music21.chord.Chord):
+#             # baseLineNotes.append('.'.join(str(n) for n in element.normalOrder))
+#             baseLineNotes('.'.join(n.name for n in element.pitches))
+#         s.append(element)
+#     # print(baseLineNotes)
+#
+#     return s
+#     # for i in range(START_OCTAVE,START_OCTAVE + NUM_OCTAVES):
+#     #     for j in range(len(NOTES)):
+#     #         baselineNotes.append(NOTES[j] + str(i))
+#     # # baselineNotes.append('R')
+#     # return baselineNotes
+#
+# def main():
+#     stream = generateBaselineNotes()
+#     # s = music21.stream.Stream()
+#     # for i in range(NUM_NOTES):
+#     #     note = music21.note.Note(random.choice(baseLineNotes))
+#     #     s.append(note)
+#     #     # note.show('midi')
+#     stream.write('midi', fp='output.mid')
+#     # s.show('midi')
 
     # TODO: try making a distribution and sampling from there?
 
-    print(baseLineNotes)  # this is just for us to test what notes have been added
-    return output_midi
-    # for i in range(START_OCTAVE,START_OCTAVE + NUM_OCTAVES):
-    #     for j in range(len(NOTES)):
-    #         baselineNotes.append(NOTES[j] + str(i))
-    # # baselineNotes.append('R')
-    # return baselineNotes
 
 def main():
-    stream = generateBaselineNotes()
-    # s = music21.stream.Stream()
-    # for i in range(NUM_NOTES):
-    #     note = music21.note.Note(random.choice(baseLineNotes))
-    #     s.append(note)
-    #     # note.show('midi')
-    stream.write('midi', fp='ed_sheeran_output.mid')
-    # s.show('midi')
+    input, output, mapping = getNotes(SEQUENCE_LEN)
+    print('Input: ' + str(len(input)))
+    print('Output: ' + str(len(output)))
+    baseline = random.choice(input)
+    for i in range(NUM_NOTES - SEQUENCE_LEN):
+        baseline.append(random.choice(output))
+    print(baseline)
 
 if __name__ == '__main__':
     main()
