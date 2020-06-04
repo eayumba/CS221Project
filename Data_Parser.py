@@ -26,18 +26,17 @@ def getNotes(maxlen):
                 raw_notes = midi.flat.notes
             for i in range(len(raw_notes) - maxlen - 1):
                 sequence = []
-                for j in range(i, i + maxlen + 1):
+                for j in range(i, i + maxlen):
                     note = convertToString(raw_notes[j])
                     if note not in unique_notes:
                         unique_notes.append(note)
                     sequence.append(note)
                 inputs.append(sequence)
-                note = convertToString(raw_notes[i + maxlen + 1])
-                if note not in unique_notes:
-                    unique_notes.append(note)
-                outputs.append(convertToString(note))
+                output = convertToString(raw_notes[i + maxlen + 1])
+                if output not in unique_notes:
+                    unique_notes.append(output)
+                outputs.append(output)
         except:
             continue
     mapping = {note: num for num, note in enumerate(unique_notes)}
-    print(mapping)
     return inputs, outputs, mapping
