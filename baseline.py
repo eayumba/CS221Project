@@ -65,7 +65,11 @@ SEQUENCE_LEN = 20
 
 
 def main():
+<<<<<<< HEAD
     input, output, mapping = getNotes(SEQUENCE_LEN)
+=======
+    input, output = getNotes(SEQUENCE_LEN)
+>>>>>>> 557f35282a14959f53e1227aab575e2d4c1017b5
     print('Input: ' + str(len(input)))
     print('Output: ' + str(len(output)))
     baseline = random.choice(input)
