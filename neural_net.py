@@ -11,7 +11,7 @@ def main():
     input, output, mapping = getNotes(SEQUENCE_LEN)
     training_input = [[mapping[note] for note in sequence] for sequence in input]
     training_output = [mapping[note]for note in output]
-    print("len(training_input[0] = ", len(training_input[0]))
+    print("len(training_input[0]) = ", len(training_input[0]))
     training_input = numpy.reshape(training_input, (len(training_input), len(training_input[0]), 1))
     model = Sequential()
     model.add(LSTM(128,
