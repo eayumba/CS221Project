@@ -3,6 +3,8 @@ import os
 
 dir = 'CS221_Training_Data'
 
+tests = ['Happy.mid', 'HipsDontLie.mid']
+
 
 def convertToString(elem):
     if isinstance(elem, music21.note.Note):
@@ -16,6 +18,8 @@ def getNotes(maxlen):
     outputs = []
     unique_notes = []
     for song in os.listdir(dir):
+        if song not in tests:
+            continue
         try:
             midi = music21.converter.parse(dir + '/' + song)
             raw_notes = None
