@@ -17,10 +17,12 @@ def main():
 
     model = rebuild_model(test_input, mapping)
     test_output = [mapping[note]for note in output]
-    test_input = numpy.reshape(test_input, (len(test_input), len(test_input[0]), 1))
+
+    # Reshapes test_input to pass into evaluate
+    test_input_np = numpy.reshape(test_input, (len(test_input), len(test_input[0]), 1))
     test_output = to_categorical(test_output, num_classes = len(mapping))
     #test_output = to_categorical_mod(test_output, mapping)
-    results = model.evaluate(test_input, test_output, batch_size=64)
+    results = model.evaluate(test_input_np, test_output, batch_size=64)
     print(results)
     output = makeNotes(model, test_input, mapping)
 
@@ -48,7 +50,7 @@ def rebuild_model(test_input, mapping):
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
     #load weights
-    model.load_weights('TrainingWeights.hdf5')
+    model.load_weights('testingweights.hdf5')
 
     return model
 
@@ -61,6 +63,8 @@ def makeNotes(model, test_input, mapping):
     output = []
 
     s = music21.stream.Stream()
+
+    offset = 0
 
     for i in range(500):
         prediction_input = numpy.reshape(initial_sequence, (1, len(initial_sequence), 1))
@@ -76,7 +80,7 @@ def makeNotes(model, test_input, mapping):
         # prediction = numpy.exp(prediction) / numpy.sum(numpy.exp(prediction))
         # index = numpy.argmax(numpy.random.multinomial(1, prediction, 1))
 
-        result = int_to_note[index]
+        result = int_to_note[index]  # should be note object
         #add the note to output stream
         if len(result) > 1:
             note = music21.chord.Chord(result.split("."))
@@ -84,12 +88,14 @@ def makeNotes(model, test_input, mapping):
             note = music21.note.Rest()
         else:
             note = music21.note.Note(result)
+        note.offset = offset
+        offset += 0.5
         s.append(note)
         output.append(result)
 
         initial_sequence.append(index)
         initial_sequence = initial_sequence[1:len(initial_sequence)]
-    s.write('midi', fp="Sample_Output.mid")
+    s.write('midi', fp="added_offset.mid")
 
     return output
 
