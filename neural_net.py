@@ -8,7 +8,6 @@ import numpy
 
 SEQUENCE_LEN = 20
 
-
 def main():
     input, output, mapping = getNotes(SEQUENCE_LEN)
     training_input = [[mapping[note] for note in sequence] for sequence in input]
@@ -22,15 +21,32 @@ def main():
                    recurrent_dropout=0.3,
                    return_sequences=True))
 
+    model.add(LSTM(512, return_sequences=True, recurrent_dropout=0.3,))
+
     model.add(LSTM(512))
     model.add(BatchNorm())
     model.add(Dense(256))
     model.add(Dropout(0.3))
     model.add(Activation('relu'))
+    model.add(Activation('softmax'))
+
+    '''
+    his layers go btwn relu and softmax
+
+    model.add(Dropout(0.3))
+    model.add(Dense(256))
+    model.add(Activation('relu'))
+    model.add(BatchNorm())
+    model.add(Dropout(0.3))
+    model.add(Dense(len(mapping)))
+    '''
+
     model.compile(loss='sparse_categorical_crossentropy', optimizer='rmsprop')
 
     #TRAINING TIME
-    filepath = "weights-improvement-{epoch:02d}-{loss:.4f}-bigger.hdf5"
+    #old filepath
+    #filepath = "weights-improvement-{epoch:02d}-{loss:.4f}-bigger.hdf5"
+    filepath = "longWeights.hdf5"
     checkpoint = ModelCheckpoint(
         filepath,
         monitor='loss',
@@ -42,7 +58,10 @@ def main():
 
     model.summary()
 
-    model.fit(training_input, training_output, epochs=5, batch_size=10, callbacks=callbacks_list)
+    model.fit(training_input, training_output, epochs=50, batch_size=100, callbacks=callbacks_list)
+    for layer in model.layers:
+        print(layer.get_weights())
+        break
 
 
 
