@@ -1,10 +1,9 @@
 import music21
 import os
 
-dir = 'CS221_Training_Data'
+training_dir = 'CS221_Training_Data'
+testing_dir = 'CS221_Testing_Data'
 
-trainingData = ['Happy.mid', 'HipsDontLie.mid']
-testData = ["LoveMeLikeYouDo.mid", "Rihanna ft Calvin Harris - We Found Love.mid"]
 
 def convertToString(elem):
     if isinstance(elem, music21.note.Note):
@@ -13,13 +12,11 @@ def convertToString(elem):
         return '.'.join(n.name for n in elem.pitches)
     return 'R'
 
-def getNotes(maxlen):
+
+def extractSequences(dir, unique_notes, maxlen):
     inputs = []
     outputs = []
-    unique_notes = []
     for song in os.listdir(dir):
-        # if song not in trainingData:
-        #     continue
         try:
             midi = music21.converter.parse(dir + '/' + song)
             raw_notes = None
@@ -42,5 +39,13 @@ def getNotes(maxlen):
                 outputs.append(output)
         except:
             continue
+    return inputs, outputs
+
+def getNotes(maxlen, train):
+    unique_notes =[]
+    training_input, training_output = extractSequences(training_dir, unique_notes, maxlen)
+    testing_input, testing_output = extractSequences(testing_dir, unique_notes, maxlen)
     mapping = {note: num for num, note in enumerate(unique_notes)}
-    return inputs, outputs, mapping
+    if train:
+        return training_input, training_output, mapping
+    return testing_input, testing_output, mapping
