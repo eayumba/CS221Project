@@ -71,7 +71,7 @@ def makeNotes(model, test_input, mapping):
 
     s = music21.stream.Stream()
 
-    for note_index in range(500):
+    for note_index in range(100):
         prediction_input = numpy.reshape(initial_sequence, (1, len(initial_sequence), 1))
         #prediction_input = prediction_input / float(n_vocab)
 
@@ -91,7 +91,10 @@ def makeNotes(model, test_input, mapping):
 
         result = int_to_note[index]
         #add the note to output stream
-        if (result == 'R'):
+        print(result)
+        if len(result) > 1:
+            note = music21.chord.Chord(result.split("."))
+        elif (result == 'R'):
             note = music21.note.Rest()
         else:
             note = music21.note.Note(result)
@@ -107,13 +110,13 @@ def makeNotes(model, test_input, mapping):
         a lot of tries to get a prediction without one of these trouble notes
         (or one i havent spotted yet)
         '''
-
         s.append(note)
         output.append(result)
 
         initial_sequence.append(index)
         initial_sequence = initial_sequence[1:len(initial_sequence)]
-    s.write('midi', fp="output.mid")
+    s.write('midi', fp="short_output.mid")
+    #SHORT OUTPUT MID HAS ONLY 100 NOTES
     print(output)
 
     return output
