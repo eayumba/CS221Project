@@ -9,44 +9,34 @@ import numpy
 SEQUENCE_LEN = 20
 
 def main():
-    input, output, mapping = getNotes(SEQUENCE_LEN)
+    input, output, mapping = getNotes(SEQUENCE_LEN, True)
     training_input = [[mapping[note] for note in sequence] for sequence in input]
     training_output = [mapping[note]for note in output]
-    # print("len(training_input[0] = ", len(training_input[0]))
     training_input = numpy.reshape(training_input, (len(training_input), len(training_input[0]), 1))
-    #training_output = to_categorical(training_output)
+    training_output = to_categorical(training_output, num_classes = len(mapping))
+    print(training_input.shape)
+    print(training_output.shape)
     model = Sequential()
     model.add(LSTM(512,
                    input_shape=(training_input.shape[1], training_input.shape[2]),   # TODO: lern more and fixlen(training_input[0]),),
-                   recurrent_dropout=0.3,
+                   recurrent_dropout=0.2,
                    return_sequences=True))
 
-    model.add(LSTM(512, return_sequences=True, recurrent_dropout=0.3,))
+    model.add(LSTM(512, return_sequences=True, recurrent_dropout=0.2,))
 
     model.add(LSTM(512))
     model.add(BatchNorm())
-    model.add(Dense(256))
-    model.add(Dropout(0.3))
     model.add(Activation('relu'))
+    model.add(Dense(len(mapping)))
+    model.add(Dropout(0.2))
     model.add(Activation('softmax'))
 
-    '''
-    his layers go btwn relu and softmax
-
-    model.add(Dropout(0.3))
-    model.add(Dense(256))
-    model.add(Activation('relu'))
-    model.add(BatchNorm())
-    model.add(Dropout(0.3))
-    model.add(Dense(len(mapping)))
-    '''
-
-    model.compile(loss='sparse_categorical_crossentropy', optimizer='rmsprop')
+    model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
     #TRAINING TIME
     #old filepath
     #filepath = "weights-improvement-{epoch:02d}-{loss:.4f}-bigger.hdf5"
-    filepath = "longWeights.hdf5"
+    filepath = "TrainingWeights.hdf5"
     checkpoint = ModelCheckpoint(
         filepath,
         monitor='loss',
@@ -54,20 +44,9 @@ def main():
         save_best_only=True,
         mode='min'
     )
-    callbacks_list = [checkpoint]
+    model_callbacks = [checkpoint]
+    model.fit(training_input, training_output, epochs=100, batch_size=64, callbacks=model_callbacks)
 
-    model.summary()
-
-    model.fit(training_input, training_output, epochs=50, batch_size=100, callbacks=callbacks_list)
-    for layer in model.layers:
-        print(layer.get_weights())
-        break
-
-
-
-# A B C D E F G
-# input[0] = [A,B,C] output[0] = D
-# input[1] = [B, C, D] output[1] = E
 
 if __name__ == '__main__':
     main()

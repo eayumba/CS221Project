@@ -10,53 +10,45 @@ from Data_Parser import getNotes
 
 SEQUENCE_LEN = 20
 
-def main():
-    input, output, mapping = getNotes(SEQUENCE_LEN)
-    test_input = [[mapping[note] for note in sequence] for sequence in input]
-    #print(test_input)
 
-    model = create_network(test_input, mapping)
-    #print(mapping)
+def main():
+    input, output, mapping = getNotes(SEQUENCE_LEN, False)
+    test_input = [[mapping[note] for note in sequence] for sequence in input]
+
+    model = rebuild_model(test_input, mapping)
+    test_output = [mapping[note]for note in output]
+    test_input = numpy.reshape(test_input, (len(test_input), len(test_input[0]), 1))
+    test_output = to_categorical(test_output, num_classes = len(mapping))
+    #test_output = to_categorical_mod(test_output, mapping)
+    results = model.evaluate(test_input, test_output, batch_size=64)
+    print(results)
     output = makeNotes(model, test_input, mapping)
 
 
-def create_network(test_input, mapping):
+
+def rebuild_model(test_input, mapping):
     # print("len(test_input[0] = ", len(test_input[0]))
     test_input = numpy.reshape(test_input, (len(test_input), len(test_input[0]), 1))
     #training_output = to_categorical(training_output)
     model = Sequential()
     model.add(LSTM(512,
                    input_shape=(test_input.shape[1], test_input.shape[2]),   # TODO: lern more and fixlen(test_input[0]),),
-                   recurrent_dropout=0.3,
+                   recurrent_dropout=0.2,
                    return_sequences=True))
 
-    model.add(LSTM(512, return_sequences=True, recurrent_dropout=0.3,))
+    model.add(LSTM(512, return_sequences=True, recurrent_dropout=0.2,))
 
     model.add(LSTM(512))
     model.add(BatchNorm())
-    model.add(Dense(256))
-    model.add(Dropout(0.3))
     model.add(Activation('relu'))
+    model.add(Dense(len(mapping)))
+    model.add(Dropout(0.2))
     model.add(Activation('softmax'))
 
-    '''
-    model.add(Dropout(0.3))
-    model.add(Dense(256))
-    model.add(Activation('relu'))
-    model.add(BatchNorm())
-    model.add(Dropout(0.3))
-    model.add(Dense(len(mapping)))
-    '''
-
-
-    model.compile(loss='sparse_categorical_crossentropy', optimizer='rmsprop')
+    model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
     #load weights
-    model.load_weights('longWeights.hdf5')
-    for layer in model.layers:
-        print(layer.get_weights())
-        break
-
+    model.load_weights('TrainingWeights.hdf5')
 
     return model
 
@@ -65,23 +57,18 @@ def makeNotes(model, test_input, mapping):
     start = numpy.random.randint(0, len(test_input)-1)
 
     int_to_note = dict((mapping[note], note) for note in mapping.keys())
-
     initial_sequence = test_input[start]
     output = []
 
     s = music21.stream.Stream()
 
-    for note_index in range(100):
+    for i in range(500):
         prediction_input = numpy.reshape(initial_sequence, (1, len(initial_sequence), 1))
         #prediction_input = prediction_input / float(n_vocab)
 
         prediction = model.predict(prediction_input, verbose=0)
-
-        cheese = [20, 40, 60, 80]
-        if note_index in cheese:
-            print(prediction)
-
         index = numpy.argmax(prediction)
+        # print(index)
         #print(type(prediction))
         #index = weightedRandomChoice(prediction)
         # temp = 0.8
@@ -91,33 +78,18 @@ def makeNotes(model, test_input, mapping):
 
         result = int_to_note[index]
         #add the note to output stream
-        print(result)
         if len(result) > 1:
             note = music21.chord.Chord(result.split("."))
         elif (result == 'R'):
             note = music21.note.Rest()
         else:
             note = music21.note.Note(result)
-        '''
-        Very common error:
-        music21.pitch.AccidentalException: #.g# is not a supported accidental type
-
-        Notes we having trouble with:
-        #.g#, .c.e, .f, #.f, .g, .a.c, .a,
-
-        should we just make them rests for now?
-        right now to gen 500 notes, it takes
-        a lot of tries to get a prediction without one of these trouble notes
-        (or one i havent spotted yet)
-        '''
         s.append(note)
         output.append(result)
 
         initial_sequence.append(index)
         initial_sequence = initial_sequence[1:len(initial_sequence)]
-    s.write('midi', fp="short_output.mid")
-    #SHORT OUTPUT MID HAS ONLY 100 NOTES
-    print(output)
+    s.write('midi', fp="Sample_Output.mid")
 
     return output
 
