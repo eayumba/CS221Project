@@ -34,8 +34,6 @@ def main():
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
     #TRAINING TIME
-    #old filepath
-    #filepath = "weights-improvement-{epoch:02d}-{loss:.4f}-bigger.hdf5"
     filepath = "TrainingWeights.hdf5"
     checkpoint = ModelCheckpoint(
         filepath,
@@ -45,7 +43,9 @@ def main():
         mode='min'
     )
     model_callbacks = [checkpoint]
-    model.fit(training_input, training_output, epochs=100, batch_size=64, callbacks=model_callbacks)
+
+    # 100 epochs led to minimal returns to training loss
+    model.fit(training_input, training_output, epochs=50, batch_size=64, callbacks=model_callbacks)
 
 
 if __name__ == '__main__':
