@@ -16,7 +16,11 @@ def convertToString(elem):
 def extractSequences(dir, unique_notes, maxlen):
     inputs = []
     outputs = []
+    song_count = 0
     for song in os.listdir(dir):
+        print("%d / 40" %(song_count))
+        song_count += 1
+        print("Parsing %s..." %(str(song)))
         try:
             midi = music21.converter.parse(dir + '/' + song)
             raw_notes = None
