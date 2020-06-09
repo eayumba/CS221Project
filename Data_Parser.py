@@ -18,7 +18,8 @@ def convertToString(elem):
    and testing inputs and outputs.'''
 def extractSequences(dir, unique_notes, maxlen):
     print("Parsing ", dir)
-    inputs, outputs = []
+    inputs = []
+    outputs = []
     song_count = 0
     song_list = os.listdir(dir)
     for song in song_list:

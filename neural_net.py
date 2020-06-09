@@ -26,8 +26,7 @@ def main():
     model.add(LSTM(LSTM_LAYER_SIZE,  # num nodes
                    input_shape=(training_input.shape[1], training_input.shape[2]),   # Since this is the first layer, we know dimentions of input
                    return_sequences=True))  # creates recurrence
-    print('training_input.shape[1] = %d, training_input.shape[2] = %d'
-            %(training_input.shape[1], training_input.shape[2]))
+
     model.add(LSTM(LSTM_LAYER_SIZE,
                    return_sequences=True,  # creates recurrence
                    recurrent_dropout= DROPOUT_RATE,))  # fraction to leave out from recurrence
