@@ -49,9 +49,9 @@ def rebuild_model(test_input, mapping):
     model.add(Lambda(lambda x: x / temp)) # adds temperature settings
     model.add(Activation('softmax'))# transforms output into a probability distribution
 
-    model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
+    model.compile(loss='categorical_crossentropy', optimizer='adam')
     #load weights
-    model.load_weights('takao_reformed_rmsprop.hdf5')
+    model.load_weights('takao_reformed_adam.hdf5')
 
     return model
 
