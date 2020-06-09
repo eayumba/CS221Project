@@ -53,7 +53,7 @@ def rebuild_model(test_input, mapping):
 
     model.compile(loss='categorical_crossentropy', optimizer='adam')
     #load weights
-    model.load_weights('takao_reformed_adam.hdf5')
+    model.load_weights('final_weights.hdf5')
 
     return model
 

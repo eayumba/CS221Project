@@ -42,7 +42,7 @@ def main():
 
     #model.summary()
     #TRAINING TIME
-    filepath = "takao_reformed_adam.hdf5"
+    filepath = "final_weights.hdf5"
 
     checkpoint = ModelCheckpoint( # used for training loss
         filepath,
