@@ -78,12 +78,12 @@ def makeNotes(model, test_input, mapping):
         #add the note to output stream
         if "." in result:
             note = music21.chord.Chord(result.split("."))
-            print("created_chord")
+            #print("created_chord")
         elif (result == 'R'):
             note = music21.note.Rest()
         else:
             note = music21.note.Note(result)
-            print("created_note")
+            #print("created_note")
         s.append(note)
         #output.append(result)
 
