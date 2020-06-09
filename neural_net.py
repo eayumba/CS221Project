@@ -7,34 +7,38 @@ from Data_Parser import getNotes
 import numpy
 
 SEQUENCE_LEN = 20
+LOADED = True # must change if songs are added to training/testing data
 
 def main():
-    input, output, mapping = getNotes(SEQUENCE_LEN, True)
+    input, output, mapping = getNotes(SEQUENCE_LEN, True, LOADED)  # getNotes(int, bool train, bool loaded)
     training_input = [[mapping[note] for note in sequence] for sequence in input]
     training_output = [mapping[note]for note in output]
     training_input = numpy.reshape(training_input, (len(training_input), len(training_input[0]), 1))
     training_output = to_categorical(training_output, num_classes = len(mapping))
-    print(training_input.shape)
-    print(training_output.shape)
+    # print(training_input.shape)
+    # print(training_output.shape)
     model = Sequential()
+    model.add(LSTM(512,  # num nodes
+                   input_shape=(training_input.shape[1], training_input.shape[2]),   # Since this is the first layer, we know dimentions of input
+                   return_sequences=True))  # creates recurrence
+    print('training_input.shape[1] = %d, training_input.shape[2] = %d'
+            %(training_input.shape[1], training_input.shape[2]))
     model.add(LSTM(512,
-                   input_shape=(training_input.shape[1], training_input.shape[2]),   # TODO: lern more and fixlen(training_input[0]),),
-                   recurrent_dropout=0.2,
-                   return_sequences=True))
+                   return_sequences=True,  # creates recurrence
+                   recurrent_dropout=0.2,))  # fraction to leave out from recurrence
 
-    model.add(LSTM(512, return_sequences=True, recurrent_dropout=0.2,))
+    model.add(LSTM(512))            # multiple LSTM layers create Deep Neural Network for greater accuracy
+    model.add(BatchNorm())          # normalizes inputs to neural network layers to make training faster
+    #model.add(Activation('relu'))  # is this appropriate for LSTM layer?Rectified Linear activation - overcomes vanishing gradient problem
+    model.add(Dropout(0.2))         # prevents overfitting
+    model.add(Dense(len(mapping)))  # classification layer - output must be same dimentions as mapping
+    model.add(Activation('softmax'))# transforms output into a probability distribution
 
-    model.add(LSTM(512))
-    model.add(BatchNorm())
-    model.add(Activation('relu'))
-    model.add(Dense(len(mapping)))
-    model.add(Dropout(0.2))
-    model.add(Activation('softmax'))
+    model.compile(loss='categorical_crossentropy', optimizer='rmsprop')  # try changing optimizer to adam - adpative moment estimation
 
-    model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
-
+    model.summary()
     #TRAINING TIME
-    filepath = "TrainingWeights.hdf5"
+    filepath = "takao_reformed_rmsprop.hdf5"
     checkpoint = ModelCheckpoint(
         filepath,
         monitor='loss',

@@ -11,19 +11,11 @@ import pickle
 import random
 
 SEQUENCE_LEN = 20
+LOADED = True  # must change if songs are added to training/testing data
 temp = 0.7
 
 def main():
-
-    with open('Data_Note_OBJECT_Parsing/mapping', 'rb') as filepath:
-        mapping = pickle.load(filepath)
-    with open('Data_Note_OBJECT_Parsing/testing_input', 'rb') as filepath:
-        input = pickle.load(filepath)
-    with open('Data_Note_OBJECT_Parsing/testing_output', 'rb') as filepath:
-        output = pickle.load(filepath)
-
-
-    # input, output, mapping = getNotes(SEQUENCE_LEN, False)
+    input, output, mapping = getNotes(SEQUENCE_LEN, False, LOADED)  # getNotes(int, bool train, bool loaded)
     test_input = [[mapping[note] for note in sequence] for sequence in input]
 
     model = rebuild_model(test_input, mapping)
@@ -37,51 +29,32 @@ def main():
 
 def rebuild_model(test_input, mapping):
     test_input = numpy.reshape(test_input, (len(test_input), len(test_input[0]), 1))
+
+    #New
     model = Sequential()
+    model.add(LSTM(512,  # num nodes
+                   input_shape=(test_input.shape[1], test_input.shape[2]),   # Since this is the first layer, we know dimentions of input
+                   return_sequences=True))  # creates recurrence
+    print('training_input.shape[1] = %d, training_input.shape[2] = %d'
+            %(test_input.shape[1], test_input.shape[2]))
     model.add(LSTM(512,
-                   input_shape=(test_input.shape[1], test_input.shape[2]),   # TODO: lern more and fixlen(test_input[0]),),
-                   recurrent_dropout=0.2,
-                   return_sequences=True))
+                   return_sequences=True,  # creates recurrence
+                   recurrent_dropout=0.2,))  # fraction to leave out from recurrence
 
-    model.add(LSTM(512, return_sequences=True, recurrent_dropout=0.2))
-
-    model.add(LSTM(512))
-    model.add(BatchNorm())
-    model.add(Activation('relu'))
-    model.add(Dense(len(mapping)))
-    model.add(Dropout(0.2))
-    model.add(Lambda(lambda x: x / temp))
-    model.add(Activation('softmax'))
+    model.add(LSTM(512))            # multiple LSTM layers create Deep Neural Network for greater accuracy
+    model.add(BatchNorm())          # normalizes inputs to neural network layers to make training faster
+    #model.add(Activation('relu'))  # is this appropriate for LSTM layer?Rectified Linear activation - overcomes vanishing gradient problem
+    model.add(Dropout(0.2))         # prevents overfitting
+    model.add(Dense(len(mapping)))  # classification layer - output must be same dimentions as mapping
+    model.add(Lambda(lambda x: x / temp)) # adds temperature settings
+    model.add(Activation('softmax'))# transforms output into a probability distribution
 
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
-
     #load weights
-    model.load_weights('TrainingWeights.hdf5')
+    model.load_weights('takao_reformed_rmsprop.hdf5')
 
     return model
 
-# Function: Weighted Random Choice
-# --------------------------------
-# Given a dictionary of the form element -> weight, selects an element
-# randomly based on distribution proportional to the weights. Weights can sum
-# up to be more than 1.
-def weightedRandomChoice(weightDict):
-    weights = []
-    elems = []
-    for elem in sorted(weightDict):
-        weights.append(weightDict[elem])
-        elems.append(elem)
-    total = sum(weights)
-    key = random.uniform(0, total)
-    runningTotal = 0.0
-    chosenIndex = None
-    for i in range(len(weights)):
-        weight = weights[i]
-        runningTotal += weight
-        if runningTotal > key:
-            chosenIndex = i
-            return elems[chosenIndex]
-    raise Exception('Should not reach here')
 
 def makeNotes(model, test_input, mapping):
     start = 0  #numpy.random.randint(0, len(test_input)-1)
@@ -94,13 +67,13 @@ def makeNotes(model, test_input, mapping):
 
     for i in range(200):
         prediction_input = numpy.reshape(initial_sequence, (1, len(initial_sequence), 1))
-        #prediction = model.predict(prediction_input, verbose=0)
+        prediction = model.predict(prediction_input, verbose=0)
         #print(prediction)
         #index = numpy.argmax(prediction)
         #numpy.ndarray.flatten(prediction)
         #print(prediction.shape)
 
-        index = numpy.random.choice(numpy.arange(len(prediction[0])), p = prediction[0])
+        index = numpy.random.choice(numpy.arange(len(prediction[0])), p = prediction[0])  # samples from distribution
 
         result = int_to_note[index]
 
@@ -116,8 +89,8 @@ def makeNotes(model, test_input, mapping):
 
         initial_sequence.append(index)
         initial_sequence = initial_sequence[1:len(initial_sequence)]
-    s.write('midi', fp="numpy_random_sampling.mid")
-
+    s.write('midi', fp="takao_reformed_rmsprop.mid")
+    print(output)
     return output
 
 if __name__ == '__main__':
