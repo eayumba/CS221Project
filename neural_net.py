@@ -7,7 +7,7 @@ from Data_Parser import getNotes
 import numpy
 
 SEQUENCE_LEN = 20
-LOADED = True # must change if songs are added to training/testing data
+LOADED = False # must change if songs are added to training/testing data
 
 def main():
     input, output, mapping = getNotes(SEQUENCE_LEN, True, LOADED)  # getNotes(int, bool train, bool loaded)
@@ -34,11 +34,11 @@ def main():
     model.add(Dense(len(mapping)))  # classification layer - output must be same dimentions as mapping
     model.add(Activation('softmax'))# transforms output into a probability distribution
 
-    model.compile(loss='categorical_crossentropy', optimizer='rmsprop')  # try changing optimizer to adam - adpative moment estimation
+    model.compile(loss='categorical_crossentropy', optimizer='adam')  # try changing optimizer to adam - adpative moment estimation
 
     model.summary()
     #TRAINING TIME
-    filepath = "takao_reformed_rmsprop.hdf5"
+    filepath = "takao_reformed_adam.hdf5"
     checkpoint = ModelCheckpoint(
         filepath,
         monitor='loss',

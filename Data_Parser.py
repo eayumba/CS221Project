@@ -8,7 +8,8 @@ testing_dir = 'CS221_Testing_Data'
 '''Function takes in a music21.note object and parses it into its string form'''
 def convertToString(elem):
     if isinstance(elem, music21.note.Note):
-        return elem.name
+        print(elem.nameWithOctave)
+        return elem.nameWithOctave
     elif isinstance(elem, music21.chord.Chord):
         return '.'.join(n.name for n in elem.pitches)
     return 'R'
@@ -50,6 +51,7 @@ def extractSequences(dir, unique_notes, maxlen):
     return inputs, outputs
 
 def getNotes(maxlen, train, loaded):
+    print('Parsing...')
     if loaded:
         with open('Data_Note_OBJECT_Parsing/mapping', 'rb') as filepath:
             mapping = pickle.load(filepath)
