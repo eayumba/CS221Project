@@ -7,12 +7,23 @@ from Data_Parser import getNotes
 import numpy
 import music21
 from Data_Parser import getNotes
+import pickle
+import random
 
 SEQUENCE_LEN = 20
-temp = 10
+temp = 0.7
 
 def main():
-    input, output, mapping = getNotes(SEQUENCE_LEN, False)
+
+    with open('Data_Note_OBJECT_Parsing/mapping', 'rb') as filepath:
+        mapping = pickle.load(filepath)
+    with open('Data_Note_OBJECT_Parsing/testing_input', 'rb') as filepath:
+        input = pickle.load(filepath)
+    with open('Data_Note_OBJECT_Parsing/testing_output', 'rb') as filepath:
+        output = pickle.load(filepath)
+
+
+    # input, output, mapping = getNotes(SEQUENCE_LEN, False)
     test_input = [[mapping[note] for note in sequence] for sequence in input]
 
     model = rebuild_model(test_input, mapping)
@@ -49,6 +60,28 @@ def rebuild_model(test_input, mapping):
 
     return model
 
+# Function: Weighted Random Choice
+# --------------------------------
+# Given a dictionary of the form element -> weight, selects an element
+# randomly based on distribution proportional to the weights. Weights can sum
+# up to be more than 1.
+def weightedRandomChoice(weightDict):
+    weights = []
+    elems = []
+    for elem in sorted(weightDict):
+        weights.append(weightDict[elem])
+        elems.append(elem)
+    total = sum(weights)
+    key = random.uniform(0, total)
+    runningTotal = 0.0
+    chosenIndex = None
+    for i in range(len(weights)):
+        weight = weights[i]
+        runningTotal += weight
+        if runningTotal > key:
+            chosenIndex = i
+            return elems[chosenIndex]
+    raise Exception('Should not reach here')
 
 def makeNotes(model, test_input, mapping):
     start = 0  #numpy.random.randint(0, len(test_input)-1)
@@ -61,8 +94,14 @@ def makeNotes(model, test_input, mapping):
 
     for i in range(200):
         prediction_input = numpy.reshape(initial_sequence, (1, len(initial_sequence), 1))
-        prediction = model.predict(prediction_input, verbose=0)
-        index = numpy.argmax(prediction)
+        #prediction = model.predict(prediction_input, verbose=0)
+        #print(prediction)
+        #index = numpy.argmax(prediction)
+        #numpy.ndarray.flatten(prediction)
+        #print(prediction.shape)
+
+        index = numpy.random.choice(numpy.arange(len(prediction[0])), p = prediction[0])
+
         result = int_to_note[index]
 
         #add the note to output stream
@@ -77,7 +116,7 @@ def makeNotes(model, test_input, mapping):
 
         initial_sequence.append(index)
         initial_sequence = initial_sequence[1:len(initial_sequence)]
-    s.write('midi', fp="Sample_Output_1000.mid")
+    s.write('midi', fp="numpy_random_sampling.mid")
 
     return output
 
