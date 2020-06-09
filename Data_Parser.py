@@ -8,7 +8,7 @@ testing_dir = 'CS221_Testing_Data'
 '''Function takes in a music21.note object and parses it into its string form'''
 def convertToString(elem):
     if isinstance(elem, music21.note.Note):
-        print(elem.nameWithOctave)
+        #print(elem.nameWithOctave)
         return elem.nameWithOctave
     elif isinstance(elem, music21.chord.Chord):
         return '.'.join(n.name for n in elem.pitches)
@@ -19,7 +19,6 @@ def convertToString(elem):
 def extractSequences(dir, unique_notes, maxlen):
     print("Parsing ", dir)
     inputs, outputs = []
-    #outputs = []
     song_count = 0
     song_list = os.listdir(dir)
     for song in song_list:

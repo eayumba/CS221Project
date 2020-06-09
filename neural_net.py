@@ -8,6 +8,11 @@ import numpy
 
 SEQUENCE_LEN = 20
 LOADED = False # must change if songs are added to training/testing data
+LSTM_LAYER_SIZE = 256
+DROPOUT_RATE = 0.2
+EPOCHS = 100
+BATCH_SIZE = 64
+
 
 def main():
     input, output, mapping = getNotes(SEQUENCE_LEN, True, LOADED)  # getNotes(int, bool train, bool loaded)
@@ -18,28 +23,28 @@ def main():
     # print(training_input.shape)
     # print(training_output.shape)
     model = Sequential()
-    model.add(LSTM(512,  # num nodes
+    model.add(LSTM(LSTM_LAYER_SIZE,  # num nodes
                    input_shape=(training_input.shape[1], training_input.shape[2]),   # Since this is the first layer, we know dimentions of input
                    return_sequences=True))  # creates recurrence
     print('training_input.shape[1] = %d, training_input.shape[2] = %d'
             %(training_input.shape[1], training_input.shape[2]))
-    model.add(LSTM(512,
+    model.add(LSTM(LSTM_LAYER_SIZE,
                    return_sequences=True,  # creates recurrence
-                   recurrent_dropout=0.2,))  # fraction to leave out from recurrence
+                   recurrent_dropout= DROPOUT_RATE,))  # fraction to leave out from recurrence
 
-    model.add(LSTM(512))            # multiple LSTM layers create Deep Neural Network for greater accuracy
+    model.add(LSTM(LSTM_LAYER_SIZE))            # multiple LSTM layers create Deep Neural Network for greater accuracy
     model.add(BatchNorm())          # normalizes inputs to neural network layers to make training faster
-    #model.add(Activation('relu'))  # is this appropriate for LSTM layer?Rectified Linear activation - overcomes vanishing gradient problem
-    model.add(Dropout(0.2))         # prevents overfitting
+    model.add(Dropout(DROPOUT_RATE))         # prevents overfitting
     model.add(Dense(len(mapping)))  # classification layer - output must be same dimentions as mapping
     model.add(Activation('softmax'))# transforms output into a probability distribution
 
     model.compile(loss='categorical_crossentropy', optimizer='adam')  # try changing optimizer to adam - adpative moment estimation
 
-    model.summary()
+    #model.summary()
     #TRAINING TIME
     filepath = "takao_reformed_adam.hdf5"
-    checkpoint = ModelCheckpoint(
+
+    checkpoint = ModelCheckpoint( # used for training loss
         filepath,
         monitor='loss',
         verbose=0,
@@ -49,7 +54,7 @@ def main():
     model_callbacks = [checkpoint]
 
     # 100 epochs led to minimal returns to training loss
-    model.fit(training_input, training_output, epochs=50, batch_size=64, callbacks=model_callbacks)
+    model.fit(training_input, training_output, epochs=EPOCHS, batch_size=BATCH_SIZE, callbacks=model_callbacks)
 
 
 if __name__ == '__main__':
