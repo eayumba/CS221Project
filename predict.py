@@ -19,7 +19,7 @@ LOADED = True  # must change if songs are added to training/testing data
 TEMP = 0.7
 LSTM_LAYER_SIZE = 256
 DROPOUT_RATE = 0.2
-EPOCHS = 100
+EPOCHS = 50
 BATCH_SIZE = 64
 N_NEW_NOTES = 200
 
