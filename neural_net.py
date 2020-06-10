@@ -6,8 +6,11 @@ from tensorflow.keras.utils import to_categorical
 from Data_Parser import getNotes
 import numpy
 
+#CONSTANTS
+WEIGHTS_DIR = 'final_weights_ep100'
 SEQUENCE_LEN = 20
-LOADED = False # must change if songs are added to training/testing data
+LOADED = True # must change if songs are added to training/testing data
+#HYPERPARAMETERS
 LSTM_LAYER_SIZE = 256
 DROPOUT_RATE = 0.2
 EPOCHS = 100
@@ -41,7 +44,7 @@ def main():
 
     #model.summary()
     #TRAINING TIME
-    filepath = "final_weights.hdf5"
+    filepath = "%s.hdf5" %WEIGHTS_DIR
 
     checkpoint = ModelCheckpoint( # used for training loss
         filepath,
@@ -52,7 +55,7 @@ def main():
     )
     model_callbacks = [checkpoint]
 
-    # 100 epochs led to minimal returns to training loss
+
     model.fit(training_input, training_output, epochs=EPOCHS, batch_size=BATCH_SIZE, callbacks=model_callbacks)
 
 

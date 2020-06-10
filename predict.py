@@ -10,8 +10,12 @@ from Data_Parser import getNotes
 import pickle
 import random
 
+#CONSTANTS
+OUTPUT_DIR = 'final_output_ep100_t7'
+WEIGHTS_DIR = 'final_weights_ep100'
 SEQUENCE_LEN = 20
 LOADED = True  # must change if songs are added to training/testing data
+#HYPERPARAMETERS
 TEMP = 0.7
 LSTM_LAYER_SIZE = 256
 DROPOUT_RATE = 0.2
@@ -44,16 +48,16 @@ def rebuild_model(test_input, mapping):
                    return_sequences=True,  # creates recurrence
                    recurrent_dropout=DROPOUT_RATE,))  # fraction to leave out from recurrence
 
-    model.add(LSTM(LSTM_LAYER_SIZE))            # multiple LSTM layers create Deep Neural Network for greater accuracy
-    model.add(BatchNorm())          # normalizes inputs to neural network layers to make training faster
-    model.add(Dropout(DROPOUT_RATE))         # prevents overfitting
-    model.add(Dense(len(mapping)))  # classification layer - output must be same dimentions as mapping
-    model.add(Lambda(lambda x: x / TEMP)) # adds temperature settings
-    model.add(Activation('softmax'))# transforms output into a probability distribution
+    model.add(LSTM(LSTM_LAYER_SIZE))     # multiple LSTM layers create Deep Neural Network for greater accuracy
+    model.add(BatchNorm())               # normalizes inputs to neural network layers to make training faster
+    model.add(Dropout(DROPOUT_RATE))     # prevents overfitting
+    model.add(Dense(len(mapping)))       # classification layer - output must be same dimentions as mapping
+    model.add(Lambda(lambda x: x / TEMP))# adds temperature settings
+    model.add(Activation('softmax'))     # transforms output into a probability distribution
 
     model.compile(loss='categorical_crossentropy', optimizer='adam')
     #load weights
-    model.load_weights('final_weights.hdf5')
+    model.load_weights('%s.hdf5' %WEIGHTS_DIR)
 
     return model
 
@@ -89,7 +93,7 @@ def makeNotes(model, test_input, mapping):
 
         initial_sequence.append(index)
         initial_sequence = initial_sequence[1:len(initial_sequence)]
-    s.write('midi', fp="final_output.mid")
+    s.write('midi', fp="%s.mid" %OUTPUT_DIR)
     #print(output)
 
 if __name__ == '__main__':
