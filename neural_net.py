@@ -7,13 +7,13 @@ from Data_Parser import getNotes
 import numpy
 
 #CONSTANTS
-WEIGHTS_DIR = 'final_weights_ep100'
+WEIGHTS_DIR = 'final_weights_ep50'
 SEQUENCE_LEN = 20
 LOADED = True # must change if songs are added to training/testing data
 #HYPERPARAMETERS
 LSTM_LAYER_SIZE = 256
 DROPOUT_RATE = 0.2
-EPOCHS = 100
+EPOCHS = 50
 BATCH_SIZE = 64
 
 
