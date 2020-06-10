@@ -1,5 +1,5 @@
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Activation, Dropout, Dense
+from tensorflow.keras.layers import LSTM, Activation, Dropout, Dense, Lambda
 from tensorflow.keras.layers import BatchNormalization as BatchNorm
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.utils import to_categorical
@@ -7,50 +7,57 @@ from Data_Parser import getNotes
 import numpy
 import music21
 from Data_Parser import getNotes
+import pickle
+import random
 
+#CONSTANTS
+OUTPUT_DIR = 'final_output_ep100_t7'
+WEIGHTS_DIR = 'final_weights_ep100'
 SEQUENCE_LEN = 20
-
+LOADED = True  # must change if songs are added to training/testing data
+#HYPERPARAMETERS
+TEMP = 0.7
+LSTM_LAYER_SIZE = 256
+DROPOUT_RATE = 0.2
+EPOCHS = 100
+BATCH_SIZE = 64
+N_NEW_NOTES = 200
 
 def main():
-    input, output, mapping = getNotes(SEQUENCE_LEN, False)
+    input, output, mapping = getNotes(SEQUENCE_LEN, False, LOADED)  # getNotes(int, bool train, bool loaded)
     test_input = [[mapping[note] for note in sequence] for sequence in input]
 
     model = rebuild_model(test_input, mapping)
     test_output = [mapping[note]for note in output]
-
-    # Reshapes test_input to pass into evaluate
     test_input_np = numpy.reshape(test_input, (len(test_input), len(test_input[0]), 1))
     test_output = to_categorical(test_output, num_classes = len(mapping))
-    #test_output = to_categorical_mod(test_output, mapping)
-    results = model.evaluate(test_input_np, test_output, batch_size=64)
-    print(results)
-    output = makeNotes(model, test_input, mapping)
+    model.evaluate(test_input_np, test_output, batch_size=BATCH_SIZE)
+    makeNotes(model, test_input, mapping)
 
 
 
 def rebuild_model(test_input, mapping):
-    # print("len(test_input[0] = ", len(test_input[0]))
     test_input = numpy.reshape(test_input, (len(test_input), len(test_input[0]), 1))
-    #training_output = to_categorical(training_output)
+
+    #New
     model = Sequential()
-    model.add(LSTM(512,
-                   input_shape=(test_input.shape[1], test_input.shape[2]),   # TODO: lern more and fixlen(test_input[0]),),
-                   recurrent_dropout=0.2,
-                   return_sequences=True))
+    model.add(LSTM(LSTM_LAYER_SIZE,  # num nodes
+                   input_shape=(test_input.shape[1], test_input.shape[2]),   # Since this is the first layer, we know dimentions of input
+                   return_sequences=True))  # creates recurrence
+    model.add(LSTM(LSTM_LAYER_SIZE,
+                   return_sequences=True,  # creates recurrence
+                   recurrent_dropout=DROPOUT_RATE,))  # fraction to leave out from recurrence
 
-    model.add(LSTM(512, return_sequences=True, recurrent_dropout=0.2,))
+    model.add(LSTM(LSTM_LAYER_SIZE))     # multiple LSTM layers create Deep Neural Network for greater accuracy
+    model.add(BatchNorm())               # normalizes inputs to neural network layers to make training faster
+    model.add(Dropout(DROPOUT_RATE))     # prevents overfitting
+    model.add(Dense(len(mapping)))       # classification layer - output must be same dimentions as mapping
+    model.add(Lambda(lambda x: x / TEMP))# adds temperature settings
+    model.add(Activation('softmax'))     # transforms output into a probability distribution
 
-    model.add(LSTM(512))
-    model.add(BatchNorm())
-    model.add(Activation('relu'))
-    model.add(Dense(len(mapping)))
-    model.add(Dropout(0.2))
-    model.add(Activation('softmax'))
-
-    model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
-
+    model.compile(loss='categorical_crossentropy', optimizer='adam')
     #load weights
-    model.load_weights('testingweights.hdf5')
+    model.load_weights('%s.hdf5' %WEIGHTS_DIR)
 
     return model
 
@@ -60,44 +67,34 @@ def makeNotes(model, test_input, mapping):
 
     int_to_note = dict((mapping[note], note) for note in mapping.keys())
     initial_sequence = test_input[start]
-    output = []
+    #output = [] we used this for error checking
 
     s = music21.stream.Stream()
 
-    offset = 0
-
-    for i in range(500):
+    for i in range(N_NEW_NOTES):
         prediction_input = numpy.reshape(initial_sequence, (1, len(initial_sequence), 1))
-        #prediction_input = prediction_input / float(n_vocab)
 
         prediction = model.predict(prediction_input, verbose=0)
-        index = numpy.argmax(prediction)
-        # print(index)
-        #print(type(prediction))
-        #index = weightedRandomChoice(prediction)
-        # temp = 0.8
-        # prediction = numpy.log(prediction) / 0.8
-        # prediction = numpy.exp(prediction) / numpy.sum(numpy.exp(prediction))
-        # index = numpy.argmax(numpy.random.multinomial(1, prediction, 1))
+        index = numpy.random.choice(numpy.arange(len(prediction[0])), p = prediction[0])  # samples from distribution
 
-        result = int_to_note[index]  # should be note object
+        result = int_to_note[index]
+
         #add the note to output stream
-        if len(result) > 1:
+        if "." in result:
             note = music21.chord.Chord(result.split("."))
+            #print("created_chord")
         elif (result == 'R'):
             note = music21.note.Rest()
         else:
             note = music21.note.Note(result)
-        note.offset = offset
-        offset += 0.5
+            #print("created_note")
         s.append(note)
-        output.append(result)
+        #output.append(result)
 
         initial_sequence.append(index)
         initial_sequence = initial_sequence[1:len(initial_sequence)]
-    s.write('midi', fp="added_offset.mid")
-
-    return output
+    s.write('midi', fp="%s.mid" %OUTPUT_DIR)
+    #print(output)
 
 if __name__ == '__main__':
     main()
